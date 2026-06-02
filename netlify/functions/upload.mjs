@@ -33,24 +33,30 @@ export default async (request, context) => {
       });
     }
 
+    // Sanitize key — remove special chars, spaces, commas
+    const cleanKey = key
+      .toLowerCase()
+      .replace(/[^a-z0-9\/\-_.]/g, '-')
+      .replace(/-+/g, '-');
+
     const { getStore } = await import("@netlify/blobs");
     const store = getStore("killaking-media");
     const arrayBuffer = await file.arrayBuffer();
 
-    await store.set(key, arrayBuffer, {
+    await store.set(cleanKey, arrayBuffer, {
       metadata: { contentType: file.type || "application/octet-stream", fileName: file.name },
     });
 
     const siteUrl = `https://${request.headers.get("host")}`;
-    const mediaUrl = `${siteUrl}/media/${key}`;
+    const mediaUrl = `${siteUrl}/media/${cleanKey}`;
 
-    return new Response(JSON.stringify({ success: true, url: mediaUrl, key }), {
+    return new Response(JSON.stringify({ success: true, url: mediaUrl, key: cleanKey }), {
       status: 200,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
   } catch (err) {
     console.error("Upload error:", err);
-    return new Response(JSON.stringify({ error: err.message, stack: err.stack }), {
+    return new Response(JSON.stringify({ error: err.message }), {
       status: 500,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
