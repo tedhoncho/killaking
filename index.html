@@ -491,8 +491,7 @@
         <thead>
           <tr>
             <th>Month</th>
-            <th style="width:70px;">Art</th>
-            <th>Song</th>
+            <th style="min-width:200px;">Song</th>
             <th>Submit to Distro</th>
             <th>Release Date</th>
             <th style="min-width:140px;">Status</th>
@@ -1157,15 +1156,17 @@ function renderTable() {
     const artworkHtml = renderArtworkCell(song, idx);
     tr.innerHTML = `
       <td>${song.month}</td>
-      <td style="padding:10px 12px;" id="artwork-cell-${idx}">
-        ${artworkHtml}
-      </td>
-      <td>
-        <input class="editable-field" data-idx="${idx}" data-field="title"
-          value="${escHtml(song.title)}" placeholder="Title TBD"
-          style="font-family:var(--font-display);font-size:17px;font-weight:700;color:${song.title ? 'var(--text)' : 'var(--text-dim)'};font-style:${song.title ? 'normal' : 'italic'};display:block;margin-bottom:3px;"
-          oninput="updateField(${idx},'title',this.value)">
-        <span style="font-family:var(--font-mono);font-size:10px;color:var(--text-dim);letter-spacing:0.08em;">Song ${song.num}</span>
+      <td style="padding:10px 12px;min-width:200px;" id="artwork-cell-${idx}">
+        <div style="display:flex;align-items:center;gap:10px;">
+          ${artworkHtml}
+          <div style="min-width:0;flex:1;">
+            <input class="editable-field" data-idx="${idx}" data-field="title"
+              value="${escHtml(song.title)}" placeholder="Title TBD"
+              style="font-family:var(--font-display);font-size:15px;font-weight:700;color:${song.title ? '#FFFFFF' : 'var(--text-dim)'};font-style:${song.title ? 'normal' : 'italic'};display:block;width:100%;"
+              oninput="updateField(${idx},'title',this.value)">
+            <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);letter-spacing:0.08em;white-space:nowrap;">Song ${song.num}</span>
+          </div>
+        </div>
       </td>
       <td><input class="editable-field" data-idx="${idx}" data-field="submit"
         value="${escHtml(song.submit)}" placeholder="Submit date"
