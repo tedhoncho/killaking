@@ -140,8 +140,8 @@
   .release-table tbody tr { border-bottom: 1px solid var(--border-subtle); transition: background 0.15s; }
   .release-table tbody tr:hover { background: rgba(255,255,255,0.02); }
   .release-table tbody tr:last-child { border-bottom: none; }
-  .release-table td { padding: 12px 16px; color: var(--text-muted); vertical-align: top; }
-  .release-table td:first-child { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; }
+  .release-table td { padding: 12px 16px; color: var(--text-muted); vertical-align: top; white-space: normal; word-break: break-word; }
+  .release-table td:first-child { font-family: var(--font-mono); font-size: 11px; color: var(--text-dim); white-space: nowrap; min-width: 70px; }
 
   /* STATUS BADGES */
   .status-badge { display: inline-flex; align-items: center; gap: 5px; font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; padding: 4px 10px; border-radius: 2px; white-space: nowrap; }
@@ -495,9 +495,9 @@
             <th>Song</th>
             <th>Submit to Distro</th>
             <th>Release Date</th>
-            <th>Status</th>
+            <th style="min-width:140px;">Status</th>
             <th>Hook Phrase</th>
-            <th>Video Plan</th>
+            <th style="min-width:180px;">Video Plan</th>
             <th style="width:32px;"></th>
           </tr>
         </thead>
@@ -1146,7 +1146,7 @@ function renderTable() {
           <span class="status-badge ${song.status}" id="status-badge-${idx}">
             <span class="dot"></span>${song.statusLabel}
           </span>
-          <select class="editable-select" style="display:none;" id="status-select-${idx}"
+          <select class="editable-select" style="display:none;width:130px;" id="status-select-${idx}"
             onchange="updateStatus(${idx}, this.value)">
             ${statusOptions.map(o => `<option value="${o.value}" ${song.status===o.value?'selected':''}>${o.label}</option>`).join('')}
           </select>
@@ -1161,7 +1161,7 @@ function renderTable() {
       <td>
         <input class="editable-field" data-idx="${idx}" data-field="video"
           value="${escHtml(song.video)}" placeholder="Video plan"
-          style="font-size:11px;"
+          style="font-size:11px;min-width:160px;"
           oninput="updateField(${idx},'video',this.value)">
       </td>
       <td style="text-align:center;">
@@ -1191,14 +1191,14 @@ function renderTable() {
               <audio controls src="${song.audioUrl || song.audioData}" style="flex:1;height:32px;"></audio>
               <button class="audio-remove-btn" onclick="removeAudio(${idx})" title="Remove audio">✕ Remove</button>
             </div>` : `
-            <div style="padding:6px 16px 14px;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">Final MP3 not yet added. Paste a direct URL from GoDaddy hosting in edit mode.</div>`}
+            <div style="padding:6px 16px 14px;font-family:var(--font-mono);font-size:10px;color:var(--text-dim);">Final MP3 not yet added. Use edit mode to upload a file or paste a direct URL.</div>`}
           </div>
           <div class="audio-upload-zone" style="flex-direction:column;align-items:flex-start;gap:8px;">
             <div style="display:flex;align-items:center;gap:10px;width:100%;">
               <button class="audio-upload-btn" onclick="showAudioUrlInput(${idx})">
                 ${hasAudio ? '✎ Edit URL' : '↑ Add MP3 URL'}
               </button>
-              <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);">Paste direct URL from GoDaddy hosting</span>
+              <span style="font-family:var(--font-mono);font-size:9px;color:var(--text-dim);">Upload MP3 or paste direct URL</span>
             </div>
             ${(song.audioUrl || '') ? `<div style="font-family:var(--font-mono);font-size:9px;color:var(--gold-dim);word-break:break-all;padding:4px 0;">${song.audioUrl}</div>` : ''}
           </div>
