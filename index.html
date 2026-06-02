@@ -1656,7 +1656,19 @@ function activateEditMode(entering) {
   if (backdropBtn) backdropBtn.style.display = editMode ? 'block' : 'none';
   applyProfileEditMode();
   applyBrandEditMode();
-  if (!editMode) showToast('Changes saved');
+  if (!editMode) {
+    // Sync all editable input values from DOM to songs array before saving
+    document.querySelectorAll('.editable-field[data-idx][data-field]').forEach(input => {
+      const idx = parseInt(input.getAttribute('data-idx'));
+      const field = input.getAttribute('data-field');
+      if (!isNaN(idx) && field && songs[idx] !== undefined) {
+        songs[idx][field] = input.value;
+        try { localStorage.setItem('kk_field_' + idx + '_' + field, input.value); } catch(e) {}
+      }
+    });
+    saveSongs();
+    showToast('Changes saved');
+  }
 }
 
 // ── ADD / DELETE SONG ──
