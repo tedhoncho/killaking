@@ -1,22 +1,35 @@
 export default async (request, context) => {
-  const key = context.params.splat;
-
-  if (!key) {
-    return new Response("Not found", { status: 404 });
-  }
-
   try {
-    const { getStore } = await import("@netlify/blobs");
-    const store = getStore("killaking-media");
-    const entry = await store.getWithMetadata(key, { type: "arrayBuffer" });
+    // Get key from URL directly - more reliable than context.params
+    const url = new URL(request.url);
+    const key = url.pathname.replace('/media/', '').replace('/.netlify/functions/media/', '');
 
-    if (!entry || !entry.data) {
+    if (!key) {
       return new Response("Not found", { status: 404 });
     }
 
-    const contentType = entry.metadata?.contentType || "application/octet-stream";
+    const { getStore } = await import("@netlify/blobs");
+    const store = getStore("killaking-media");
 
-    return new Response(entry.data, {
+    // Try to get the blob
+    const result = await store.getWithMetadata(key, { type: "arrayBuffer" });
+
+    if (!result || !result.data) {
+      // Debug: list what's actually in the store
+      return new Response(JSON.stringify({ 
+        error: "Not found", 
+        requestedKey: key,
+        url: request.url,
+        pathname: url.pathname
+      }), { 
+        status: 404,
+        headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" }
+      });
+    }
+
+    const contentType = result.metadata?.contentType || "application/octet-stream";
+
+    return new Response(result.data, {
       status: 200,
       headers: {
         "Content-Type": contentType,
@@ -25,8 +38,10 @@ export default async (request, context) => {
       },
     });
   } catch (err) {
-    console.error("Media error:", err);
-    return new Response("Error: " + err.message, { status: 500 });
+    return new Response(JSON.stringify({ error: err.message, stack: err.stack }), { 
+      status: 500,
+      headers: { "Content-Type": "application/json" }
+    });
   }
 };
 
