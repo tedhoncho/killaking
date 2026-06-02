@@ -1,0 +1,9 @@
+{
+  "name": "killaking-dashboard",
+  "version": "1.0.0",
+  "description": "Killa King Distribution Dashboard",
+  "type": "module",
+  "dependencies": {
+    "@netlify/blobs": "^8.1.0"
+  }
+}
