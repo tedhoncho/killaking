@@ -133,7 +133,7 @@
   .asset-card-add span { font-family: var(--font-mono); font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--text-dim); }
 
   /* RELEASE TABLE */
-  .release-table-wrap { border: 1px solid var(--border); border-radius: 4px; overflow: hidden; margin-bottom: 1.5rem; }
+  .release-table-wrap { border: 1px solid var(--border); border-radius: 4px; overflow-x: auto; margin-bottom: 1.5rem; }
   .release-table { width: 100%; border-collapse: collapse; font-size: 13px; }
   .release-table thead tr { background: var(--surface2); border-bottom: 1px solid var(--border); }
   .release-table th { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.15em; text-transform: uppercase; color: var(--gold-dim); padding: 14px 16px; text-align: left; font-weight: 400; white-space: nowrap; }
@@ -265,6 +265,51 @@
   /* TOAST */
   .toast { position: fixed; bottom: 2rem; right: 2rem; background: var(--surface2); border: 1px solid var(--border); border-radius: 4px; padding: 12px 20px; font-family: var(--font-mono); font-size: 11px; color: var(--gold); z-index: 300; transform: translateY(80px); opacity: 0; transition: all 0.3s ease; }
   .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* MOBILE RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 0 1rem; }
+    .nav-links { display: none; }
+    .hero { padding: 5rem 1.25rem 3rem; }
+    .hero-stats { gap: 1.5rem; flex-wrap: wrap; }
+    .hero-stat-num { font-size: 26px; }
+    section { padding: 3rem 1.25rem; }
+    .section-full > .inner { padding: 3rem 1.25rem; }
+    .profile-grid { grid-template-columns: 1fr; gap: 2rem; }
+    .brand-grid { grid-template-columns: 1fr; }
+    .style-row { grid-template-columns: 1fr; }
+    .do-dont { grid-template-columns: 1fr; }
+    .assets-grid { grid-template-columns: repeat(2, 1fr); }
+    .section-title { font-size: 28px; }
+
+    /* HIDE TABLE ON MOBILE - show cards instead */
+    .release-table-wrap { display: none; }
+    .mobile-songs { display: flex; flex-direction: column; gap: 12px; }
+
+    /* NAV mobile */
+    nav { height: auto; padding: 0.75rem 1rem; flex-wrap: wrap; gap: 8px; }
+    .nav-brand-img { height: 24px; }
+  }
+  @media (min-width: 769px) {
+    .mobile-songs { display: none; }
+    .release-table-wrap { display: block; }
+  }
+
+  /* MOBILE SONG CARD */
+  .mobile-song-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
+  .mobile-song-header { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border-subtle); }
+  .mobile-song-thumb { width: 52px; height: 52px; border-radius: 4px; overflow: hidden; flex-shrink: 0; background: var(--surface3); display: flex; align-items: center; justify-content: center; }
+  .mobile-song-thumb img { width: 100%; height: 100%; object-fit: cover; }
+  .mobile-song-title { font-family: var(--font-display); font-size: 18px; font-weight: 700; color: #fff; line-height: 1.2; }
+  .mobile-song-num { font-family: var(--font-mono); font-size: 10px; color: var(--text-dim); letter-spacing: 0.08em; margin-top: 2px; }
+  .mobile-song-body { padding: 12px; display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .mobile-field { display: flex; flex-direction: column; gap: 3px; }
+  .mobile-field-label { font-family: var(--font-mono); font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase; color: var(--gold-dim); }
+  .mobile-field-value { font-size: 12px; color: var(--text-muted); }
+  .mobile-song-footer { padding: 10px 12px; border-top: 1px solid var(--border-subtle); display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .mobile-song-card .audio-section { border-top: 1px solid var(--border-subtle); }
+  .mobile-song-card .lyrics-row { display: block; }
+  .mobile-song-card .lyrics-row td { display: block; }
 
   /* FOOTER */
   footer { border-top: 1px solid var(--border); padding: 2.5rem; display: flex; align-items: center; justify-content: space-between; max-width: 100%; position: relative; z-index: 1; }
@@ -492,10 +537,10 @@
           <tr>
             <th>Month</th>
             <th style="min-width:200px;">Song</th>
-            <th>Submit to Distro</th>
-            <th>Release Date</th>
+            <th style="min-width:120px;">Submit to Distro</th>
+            <th style="min-width:120px;">Release Date</th>
             <th style="min-width:140px;">Status</th>
-            <th>Hook Phrase</th>
+            <th style="min-width:140px;">Hook Phrase</th>
             <th style="min-width:180px;">Video Plan</th>
             <th style="width:32px;"></th>
           </tr>
@@ -504,6 +549,8 @@
         </tbody>
       </table>
     </div>
+    <!-- MOBILE CARDS -->
+    <div class="mobile-songs" id="mobileSongsContainer"></div>
     <button class="add-song-btn edit-only" id="addSongBtn" onclick="addSong()" style="display:none;">
       + Add Song
     </button>
@@ -981,6 +1028,67 @@ function addListItem(isDont) {
   applyBrandEditMode();
 }
 
+function renderMobileCards() {
+  const container = document.getElementById('mobileSongsContainer');
+  if (!container) return;
+  container.innerHTML = '';
+  songs.forEach((song, idx) => {
+    const src = song.artworkUrl || song.artworkData || '';
+    const hasArt = src.length > 5;
+    const hasAudio = (song.audioUrl && song.audioUrl.length > 5) || (song.audioData && song.audioData.length > 50);
+
+    const card = document.createElement('div');
+    card.className = 'mobile-song-card';
+    card.innerHTML = `
+      <div class="mobile-song-header">
+        <div class="mobile-song-thumb" id="mobile-art-${idx}">
+          ${hasArt ? `<img src="${src}" alt="Artwork">` : `<span style="font-size:18px;opacity:0.2;color:var(--gold);">◈</span>`}
+        </div>
+        <div style="flex:1;min-width:0;">
+          <div class="mobile-song-title">${escHtml(song.title) || '<span style="color:var(--text-dim);font-style:italic;font-size:14px;">Title TBD</span>'}</div>
+          <div class="mobile-song-num">Song ${song.num} · ${song.month}</div>
+        </div>
+        <span class="status-badge ${song.status}"><span class="dot"></span>${song.statusLabel}</span>
+      </div>
+      <div class="mobile-song-body">
+        <div class="mobile-field">
+          <div class="mobile-field-label">Submit</div>
+          <div class="mobile-field-value">${escHtml(song.submit) || '—'}</div>
+        </div>
+        <div class="mobile-field">
+          <div class="mobile-field-label">Release</div>
+          <div class="mobile-field-value" style="color:var(--gold);">${escHtml(song.release) || '—'}</div>
+        </div>
+        <div class="mobile-field" style="grid-column:1/-1;">
+          <div class="mobile-field-label">Hook Phrase</div>
+          <div class="mobile-field-value" style="${song.hook ? 'color:var(--gold);font-style:italic;' : ''}">${escHtml(song.hook) || 'TBD — set at recording'}</div>
+        </div>
+        <div class="mobile-field" style="grid-column:1/-1;">
+          <div class="mobile-field-label">Video Plan</div>
+          <div class="mobile-field-value">${escHtml(song.video) || '—'}</div>
+        </div>
+      </div>
+      ${hasAudio ? `
+      <div style="padding:10px 12px;border-top:1px solid var(--border-subtle);">
+        <audio controls src="${song.audioUrl || song.audioData}" style="width:100%;height:32px;"></audio>
+      </div>` : ''}
+      <div style="padding:6px 12px 0;border-top:1px solid var(--border-subtle);">
+        <button class="lyrics-toggle" onclick="toggleLyrics(${idx})" id="mobile-lyrics-toggle-${idx}" style="padding:8px 0;">
+          <span class="lyrics-arrow" id="mobile-lyrics-arrow-${idx}">▶</span>
+          Lyrics
+        </button>
+        <div class="lyrics-container" id="mobile-lyrics-container-${idx}">
+          <div class="lyrics-inner">
+            <textarea class="lyrics-textarea" placeholder="Paste lyrics here…"
+              oninput="updateField(${idx},'lyrics',this.value)">${escHtml(song.lyrics)}</textarea>
+          </div>
+        </div>
+      </div>
+    `;
+    container.appendChild(card);
+  });
+}
+
 function renderArtworkCell(song, idx) {
   const src = song.artworkUrl || song.artworkData || '';
   const hasArt = src.length > 5;
@@ -1194,7 +1302,7 @@ function renderTable() {
       <td>
         <input class="editable-field" data-idx="${idx}" data-field="hook"
           value="${escHtml(song.hook)}" placeholder="TBD — set at recording"
-          style="${song.hook ? 'color:var(--gold);font-style:italic;' : 'color:var(--text-dim);font-style:italic;'}"
+          style="${song.hook ? 'color:var(--gold);font-style:italic;' : 'color:var(--text-dim);font-style:italic;'};min-width:130px;"
           oninput="updateField(${idx},'hook',this.value)">
       </td>
       <td>
@@ -1855,6 +1963,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderProfile();
   renderBrand();
   renderTable();
+  renderMobileCards();
   renderAssets();
   // Restore saved backdrop or use baked default
   try {
