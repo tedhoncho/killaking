@@ -1071,6 +1071,19 @@ async function uploadMediaFile(idx, type, input) {
   const statusEl = document.getElementById('media-pick-status-' + idx);
   if (statusEl) statusEl.textContent = 'Uploading...';
 
+  // Show local preview immediately for artwork
+  if (type === 'artwork') {
+    const localReader = new FileReader();
+    localReader.onload = e => {
+      songs[idx].artworkData = e.target.result;
+      songs[idx].artworkName = file.name;
+      saveSongs();
+      const cell = document.getElementById('artwork-cell-' + idx);
+      if (cell) cell.innerHTML = renderArtworkCell(songs[idx], idx);
+    };
+    localReader.readAsDataURL(file);
+  }
+
   const key = type === 'artwork'
     ? `artwork/song-${String(idx+1).padStart(2,'0')}-${file.name.replace(/\s+/g,'-').toLowerCase()}`
     : `mp3s/song-${String(idx+1).padStart(2,'0')}-${file.name.replace(/\s+/g,'-').toLowerCase()}`;
@@ -1103,12 +1116,32 @@ async function uploadMediaFile(idx, type, input) {
         const modal = document.getElementById('media-input-modal');
         if (modal) modal.remove();
       }, 800);
-      showToast('✓ Uploaded to Netlify Blobs');
+      showToast('✓ Saved to Netlify Blobs');
     } else {
-      if (statusEl) statusEl.textContent = '✗ Error: ' + (data.error || 'Upload failed');
+      // Upload failed but local preview still shows - save locally as fallback
+      if (type === 'artwork') {
+        if (statusEl) statusEl.textContent = '⚠ Saved locally — ' + (data.error || 'Blobs unavailable');
+        setTimeout(() => {
+          const modal = document.getElementById('media-input-modal');
+          if (modal) modal.remove();
+        }, 1200);
+        showToast('⚠ Artwork saved locally');
+      } else {
+        if (statusEl) statusEl.textContent = '✗ Error: ' + (data.error || 'Upload failed');
+      }
     }
   } catch (err) {
-    if (statusEl) statusEl.textContent = '✗ Upload failed — check connection';
+    // Network error - for artwork, local preview already saved as fallback
+    if (type === 'artwork') {
+      if (statusEl) statusEl.textContent = '⚠ Saved locally (no network)';
+      setTimeout(() => {
+        const modal = document.getElementById('media-input-modal');
+        if (modal) modal.remove();
+      }, 1200);
+      showToast('⚠ Artwork saved locally');
+    } else {
+      if (statusEl) statusEl.textContent = '✗ Upload failed — check connection';
+    }
     console.error('Upload error:', err);
   }
 }
