@@ -1,8 +1,4 @@
-import { getStore } from "@netlify/blobs";
-
 export default async (request, context) => {
-  const url = new URL(request.url);
-  // key = everything after /media/
   const key = context.params.splat;
 
   if (!key) {
@@ -10,16 +6,17 @@ export default async (request, context) => {
   }
 
   try {
-    const store = getStore({ name: "killaking-media", consistency: "strong" });
-    const { data, metadata } = await store.getWithMetadata(key, { type: "arrayBuffer" });
+    const { getStore } = await import("@netlify/blobs");
+    const store = getStore("killaking-media");
+    const entry = await store.getWithMetadata(key, { type: "arrayBuffer" });
 
-    if (!data) {
+    if (!entry || !entry.data) {
       return new Response("Not found", { status: 404 });
     }
 
-    const contentType = metadata?.contentType || "application/octet-stream";
+    const contentType = entry.metadata?.contentType || "application/octet-stream";
 
-    return new Response(data, {
+    return new Response(entry.data, {
       status: 200,
       headers: {
         "Content-Type": contentType,
@@ -28,8 +25,8 @@ export default async (request, context) => {
       },
     });
   } catch (err) {
-    console.error("Media fetch error:", err);
-    return new Response("Not found", { status: 404 });
+    console.error("Media error:", err);
+    return new Response("Error: " + err.message, { status: 500 });
   }
 };
 

@@ -1,7 +1,4 @@
-import { getStore } from "@netlify/blobs";
-
 export default async (request, context) => {
-  // Handle CORS preflight
   if (request.method === "OPTIONS") {
     return new Response(null, {
       headers: {
@@ -19,10 +16,9 @@ export default async (request, context) => {
   try {
     const formData = await request.formData();
     const file = formData.get("file");
-    const key = formData.get("key"); // e.g. "artwork/song-01" or "mp3s/last-days"
+    const key = formData.get("key");
     const password = formData.get("password");
 
-    // Password protection — same as edit mode password
     if (password !== "killaking2026") {
       return new Response(JSON.stringify({ error: "Unauthorized" }), {
         status: 401,
@@ -37,16 +33,15 @@ export default async (request, context) => {
       });
     }
 
-    const store = getStore({ name: "killaking-media", consistency: "strong" });
+    const { getStore } = await import("@netlify/blobs");
+    const store = getStore("killaking-media");
     const arrayBuffer = await file.arrayBuffer();
-    const contentType = file.type || "application/octet-stream";
 
     await store.set(key, arrayBuffer, {
-      metadata: { contentType, fileName: file.name, uploadedAt: new Date().toISOString() },
+      metadata: { contentType: file.type || "application/octet-stream", fileName: file.name },
     });
 
-    // Build the public URL
-    const siteUrl = context.site?.url || `https://${request.headers.get("host")}`;
+    const siteUrl = `https://${request.headers.get("host")}`;
     const mediaUrl = `${siteUrl}/media/${key}`;
 
     return new Response(JSON.stringify({ success: true, url: mediaUrl, key }), {
@@ -55,7 +50,7 @@ export default async (request, context) => {
     });
   } catch (err) {
     console.error("Upload error:", err);
-    return new Response(JSON.stringify({ error: err.message }), {
+    return new Response(JSON.stringify({ error: err.message, stack: err.stack }), {
       status: 500,
       headers: { "Content-Type": "application/json", "Access-Control-Allow-Origin": "*" },
     });
